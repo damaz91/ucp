@@ -23,7 +23,7 @@
 The Cart capability enables basket building without the complexity of checkout.
 While [Checkout](checkout.md) manages payment handlers, status lifecycle, and
 order finalization, cart provides a lightweight CRUD interface for item
-collection before purchase intent is established.
+collection before purchase intent is established
 
 **When to use Cart vs Checkout:**
 
