@@ -17,7 +17,7 @@
 # Checkout Capability - REST Binding
 
 This document specifies the REST binding for the
-[Checkout Capability](checkout.md).
+[Checkout Capability](checkout.md)
 
 ## Protocol Fundamentals
 

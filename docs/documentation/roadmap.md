@@ -19,7 +19,7 @@
 This roadmap is meant to provide transparency into our strategic priorities and
 to align our partners on the critical path toward a fully agentic, global
 commerce standard. Our goal is to move beyond isolated transactions and build a
-cohesive, intelligent commerce layer that works across borders and verticals.
+cohesive, intelligent commerce layer that works across borders and verticals
 
 **Note:** This roadmap reflects our current direction and intends to guide
 planning, but it does not constitute a commitment to deliver specific features.
