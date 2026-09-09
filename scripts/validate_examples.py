@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# cspell:ignore shema directon
+# cspell:ignore shema directon skiped
 """Validate JSON examples in UCP specification documentation.
 
 UCP doc examples use a bespoke JSON capability set: strict JSON plus
@@ -136,6 +136,10 @@ _KNOWN_ATTRS = frozenset(
   {"schema", "op", "direction", "extract", "target", "def"}
 )
 
+# `skip` must appear as a whole word. A prefix match would let a typo such as
+# `skiped` or `skip_the_check` silently disable validation for that example.
+_SKIP_RE = re.compile(r"skip\b")
+
 # -----------------------------------------------------------
 # Annotation parsing
 # -----------------------------------------------------------
@@ -149,11 +153,18 @@ def parse_annotation(text: str) -> dict:
   reported via a reserved "_error" key (consumed by process_block).
   """
   text = text.strip()
-  if text.startswith("skip"):
-    reason_match = re.search(r'reason="([^"]*)"', text)
+  if _SKIP_RE.match(text):
+    reason_match = re.search(r'reason="([^"]+)"', text)
+    if reason_match is None:
+      return {
+        "_error": (
+          'skip annotation requires a non-empty reason="..." '
+          "so every skipped example stays auditable"
+        )
+      }
     return {
       "skip": True,
-      "reason": (reason_match.group(1) if reason_match else ""),
+      "reason": reason_match.group(1),
     }
   attrs: dict = {}
   unknown: list[str] = []
@@ -407,11 +418,15 @@ def strip_ellipsis(obj, _path="", _paths=None):
         result[k] = strip_ellipsis(v, child_path, _paths)
     return result if _path else (result, _paths)
   elif isinstance(obj, list):
+    # Child paths use the post-strip index — the position the item
+    # occupies in the payload the validator sees. Removed sentinels
+    # shift later items left, so the source index would point at the
+    # wrong element (or suppress a real error on a shifted sibling).
     items = []
-    for i, item in enumerate(obj):
+    for item in obj:
       if item == "...":
         continue
-      items.append(strip_ellipsis(item, f"{_path}/{i}", _paths))
+      items.append(strip_ellipsis(item, f"{_path}/{len(items)}", _paths))
     return items if _path else (items, _paths)
   return obj if _path else (obj, _paths)
 
@@ -637,7 +652,7 @@ def resolve_schema(
   schema_base: Path,
 ) -> dict:
   """Resolve a schema via ucp-schema, with caching."""
-  key = (schema_path, direction, op)
+  key = (schema_base.resolve(), schema_path, direction, op)
   if key in _schema_cache:
     return _schema_cache[key]
 
